@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import { Link } from 'react-router-dom'
 import PropTypes from 'prop-types'
+import { throttle } from "throttle-debounce";
 import * as BooksAPI from './BooksAPI'
 import Book from './Book'
 import * as Constants from './Constants'
@@ -19,15 +20,21 @@ class SearchBooks extends Component {
   handleChange = (event) => {
     let term = event.target.value
     this.setState({ term }, () => {
-      BooksAPI.search(term).then((books) => {
-        if(books === undefined || books.error) {
-          this.setState({ books: [] })
-        } else {
-          this.setState({ books })
-        }
-      })
+      this.searchBooksThrottled(this.state.term);
     })
   }
+
+  searchBooks = (term) => {
+    BooksAPI.search(term).then((books) => {
+      if(books === undefined || books.error) {
+        this.setState({ books: [] })
+      } else {
+        this.setState({ books })
+      }
+    })
+  }
+
+  searchBooksThrottled = throttle(500, this.searchBooks)
 
   findBookshelfForBook = (book, bookshelfs) => {
     const bookshelfNames = Object.keys(bookshelfs)
